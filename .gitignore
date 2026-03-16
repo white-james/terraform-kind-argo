@@ -1,0 +1,32 @@
+# Local Terraform directories
+.terraform/
+.terraform.lock.hcl # Optional: Some prefer to track this file for dependency locking
+
+# Terraform state files and backups
+*.tfstate
+*.tfstate.*.backup
+*.tfstate.lock.info
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Variable files that may contain sensitive data
+*.tfvars
+*.tfvars.json
+
+# Terraform override files (local overrides)
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Terraform CLI configuration files
+.terraformrc
+terraform.rc
+
+# VS Code directory (if applicable)
+.vscode/
+
+# Operating system specific files (e.g., Mac)
+.DS_Store
