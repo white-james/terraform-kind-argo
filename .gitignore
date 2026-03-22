@@ -5,6 +5,7 @@
 # Terraform state files and backups
 *.tfstate
 *.tfstate.*.backup
+terraform.tfstate.backup
 *.tfstate.lock.info
 
 # Crash log files
@@ -30,3 +31,6 @@ terraform.rc
 
 # Operating system specific files (e.g., Mac)
 .DS_Store
+
+# Ingnore Kind provider files
+dev-cluster-config
