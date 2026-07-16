@@ -1,20 +1,20 @@
-# Local ArgoCD Deployment with Terraform & Kind
+# Local Kubernetes GitOps with Terraform & Kind
 
-This project automates the creation of a local Kubernetes environment using **Kind** (Kubernetes In Docker) and installs **ArgoCD** using the Terraform **Helm** provider.
+This project automates the creation of local Kubernetes clusters using **Kind** and optionally bootstraps a GitOps tool of your choice: **Argo CD** or **Flux CD**.
 
 ## 🚀 What this repository does
 
-1. **Creates a Kubernetes Cluster**  
-   Uses the `tehcyx/kind` provider to spin up a local cluster named `dev-cluster`.
+1. **Creates one or more Kind clusters**  
+   Uses the `tehcyx/kind` provider to spin up local clusters such as `dev-cluster`.
 
-2. **Configures Networking**  
+2. **Configures networking**  
    Maps host ports `80` and `443` to the Kind control-plane for future ingress use.
 
-3. **Sets up Namespace**  
-   Creates a dedicated `argocd` namespace for isolation.
+3. **Selects a GitOps tool**  
+   You can install either Argo CD, Flux CD, or neither by setting the `gitops_tool` variable.
 
-4. **Deploys ArgoCD**  
-   Installs the latest official ArgoCD Helm chart from `argoproj.github.io`.
+4. **Deploys the chosen GitOps tool**  
+   Installs the selected Helm release into the appropriate namespace.
 
 ---
 
@@ -28,50 +28,70 @@ This project automates the creation of a local Kubernetes environment using **Ki
 
 ## 💻 Usage
 
-### 1. Initialize and Deploy
+### 1. Initialize and deploy
 
-Run the following commands to provision the cluster and ArgoCD:
+Run the following commands to provision the cluster and bootstrap the default GitOps tool:
 
 ```bash
 terraform init
 terraform apply
 ```
 
-For multi cluster setup you can pass a list of environments:
+By default, this installs **Argo CD**. To choose a different tool, set the `gitops_tool` variable:
 
 ```bash
-terraform init
+terraform apply -var='gitops_tool=argo'
+terraform apply -var='gitops_tool=flux'
+terraform apply -var='gitops_tool=none'
+```
+
+For a multi-cluster setup, you can pass a list of environments:
+
+```bash
 terraform apply -var='environments=["dev","uat","prod"]'
 ```
 
-Argo CD will only be installed into the dev cluster as we can deploy to multiple clusters from one ArgoCD instance 
+### 2. Access the GitOps UI or resources
 
-### 2. Access the ArgoCD UI
+#### Argo CD
 
-Since the service is internal, use kubectl to port-forward the API server to your local machine:
+If you installed Argo CD, port-forward the API server to your local machine:
 
 ```bash
 kubectl port-forward svc/argocd-server -n argocd 8080:443
 ```
 
-Now open your browser and navigate to:
+Then open:
 
-```bash
+```text
 https://localhost:8080
 ```
 
-### 3. Extract the Admin Password
-
-The default username is admin. Retrieve the auto-generated password with:
+To retrieve the initial admin password:
 
 ```bash
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 ```
 
-### 4. Destroy the Environment
+#### Flux CD
+
+If you installed Flux CD, you can verify the installation with:
+
+```bash
+kubectl get pods -n flux-system
+```
+
+### 3. Destroy the environment
 
 To destroy the cluster and all associated resources:
 
 ```bash
 terraform destroy
 ```
+
+---
+
+## ⚙️ Variables
+
+- `environments`: list of clusters to create (default: `['dev']`)
+- `gitops_tool`: which GitOps tool to install (`argo`, `flux`, or `none`)
