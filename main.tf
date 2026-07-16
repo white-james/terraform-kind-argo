@@ -24,6 +24,7 @@ resource "kind_cluster" "default" {
 }
 
 resource "kubernetes_namespace_v1" "argocd" {
+  count = var.gitops_tool == "argo" ? 1 : 0
   metadata {
     name = "argocd"
     labels = {
@@ -33,14 +34,36 @@ resource "kubernetes_namespace_v1" "argocd" {
   depends_on = [ kind_cluster.default ]
 }
 
+resource "kubernetes_namespace_v1" "flux-system" {
+  count = var.gitops_tool == "flux" ? 1 : 0
+  metadata {
+    name = "flux-system"
+    labels = {
+      "app.kubernetes.io/managed-by" = "terraform"
+    }
+  }
+  depends_on = [ kind_cluster.default ]
+}
+
 resource "helm_release" "argocd" {
+  count      = var.gitops_tool == "argo" ? 1 : 0
   name       = "argocd"
   repository = "https://argoproj.github.io/argo-helm"
   chart      = "argo-cd"
   version    = "9.4.15" # Use the latest stable version
-  namespace  = kubernetes_namespace_v1.argocd.metadata[0].name
-  
-  depends_on = [ kubernetes_namespace_v1.argocd ]
+  namespace  = kubernetes_namespace_v1.argocd[0].metadata[0].name
+
+  depends_on = [kubernetes_namespace_v1.argocd]
+}
+
+resource "helm_release" "flux" {
+  count      = var.gitops_tool == "flux" ? 1 : 0
+  name       = "flux2"
+  repository = "https://fluxcd-community.github.io/helm-charts"
+  chart      = "flux2"
+  namespace  = kubernetes_namespace_v1.flux-system[0].metadata[0].name
+
+  depends_on = [kubernetes_namespace_v1.flux-system]
 }
 
 
